@@ -1114,6 +1114,17 @@ class WalletDB(JsonDB):
         return list(self.txi.get(tx_hash, {}).keys())
 
     @locked
+    def get_tx_ismine_inputs(self, tx_hash: str) -> List[str]:
+        """Returns dict of tx inputs that have is_mine addresses"""
+        assert isinstance(tx_hash, str)
+        prevouts = {}
+        txi = self.txi.get(tx_hash, {})
+        for addr, _txi in txi.items():
+            for k in _txi.keys():
+                prevouts[k] = addr
+        return prevouts
+
+    @locked
     def get_txo_addresses(self, tx_hash: str) -> List[str]:
         """Returns list of is_mine addresses that appear as outputs in tx."""
         assert isinstance(tx_hash, str)

@@ -900,19 +900,16 @@ class Abstract_Wallet(ABC, Logger, EventListener):
             result = {}
             parents = []
             uncles = []
-            tx = self.adb.get_transaction(txid)
-            assert tx, f"cannot find {txid} in db"
-            for i, txin in enumerate(tx.inputs()):
-                _txid = txin.prevout.txid.hex()
+            for prevout, addr in self.db.get_tx_ismine_inputs(txid).items():
+                _txid, _index = prevout.split(':')
                 parents.append(_txid)
                 # detect address reuse
-                addr = self.adb.get_txin_address(txin)
                 received, sent = self.adb.get_addr_io(addr)
                 if len(sent) > 1:
-                    my_txid, my_height, my_pos = sent[txin.prevout.to_str()]
+                    my_txid, my_height, my_pos = sent[prevout]
                     assert my_txid == txid
                     for k, v in sent.items():
-                        if k != txin.prevout.to_str():
+                        if k != prevout:
                             reuse_txid, reuse_height, reuse_pos = v
                             if (reuse_height, reuse_pos) < (my_height, my_pos):
                                 uncle_txid, uncle_index = k.split(':')
